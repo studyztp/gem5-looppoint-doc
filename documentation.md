@@ -34,6 +34,7 @@ gem5 guarantees support the analysis of markers and basic block vectors with cus
 After getting the results from the analysis, we will need to select the samples offline based on the results.
 
 In this tutorial, we will use the workload `IS` from NPB class A in the gem5 resource with a simple ARM board with 2 cores and 2 threads to demonstrate how to perform the program analysis for the LoopPoint methodology in gem5.
+The workload resource can be found here: [arm-ubuntu-24.04-npb-is-a tag 1.0.0](https://resources.gem5.org/resources/arm-ubuntu-24.04-npb-is-a?database=gem5-resources&version=1.0.0).
 We will project the basic block vectors to dim=15 using PCA and use k-means clustering with k=2 as our *demonstration* sample selection method.  
 This setting fits this example's case because NPB benchmark `IS` with class A input is small enough to complete within seconds on real hardware, so it does not have enough regions to justify a larger value of k to achieve a meaningful speedup when applying the sampling methodology.
 You can always change the selection method.
@@ -359,5 +360,51 @@ You should have an output json file that looks something like below:
 ```
 
 Now, we can move on to offline representative region selection and marker calculation.
+
+## Sample Selection
+
+There are many ways to select representative regions.
+You can match the format to Pin output format and use [run-looppoint.py](https://github.com/nus-comparch/looppoint/blob/main/run-looppoint.py) provided by the LoopPoint repo, you can match the format to use the [SimPoint tool](https://cseweb.ucsd.edu/~calder/simpoint/), you can also use Python packages, such as scikit-learn, to cluster the basic block vectors.
+
+In this tutorial, we will be using scikit-learn to perform the PCA projection and k-means clustering.
+We will project the basic block vectors to dim=15 using PCA and use k=2 for the k-means clustering because we only found 11 regions out of this workload's execution.
+
+First, we need to process the basic block vectors to weight the basic blocks with the number of instructions inside the basic blocks and normalize the vectors.
+Then, we will reduce the dimension of the basic block vectors into 15 and use k-means clustering to cluster the basic block vectors.
+Since our k is too small, for demonstration purpose, I won't use BIC score to select the best k in this tutorial.
+After clustering, we will have 2 representative regions and their multipliers as the LoopPoint methodology needs.
+
+At the end, we will need to calculate the markers for the representative regions for locating the samples in our next step.
+
+### Processing Output
+
+Before processing the output, let's understand what's in our output.
+
+```markdown
+- Region ID:
+  - global_bbv
+    - (basic block branch inst address) → (count)
+      - e.g., "0x402ea4": 1
+  - global_length: (total instruction count)
+    - e.g., 98886766
+  - global_loop_counter
+    - (loop branch inst address) → (iteration count)
+      - e.g., "0x401f34": 5227530
+  - most_recent_loop: (address of most last executed loop)
+    - e.g., "0x402c44"
+  - most_recent_loop_count: (how many times that loop has executed)
+    - e.g., 1
+  - bb_inst_map
+    - (basic block branch inst address) → (number of static instructions inside the basic block)
+      - e.g., "0x402738": 9
+```
+
+The `global_bbv` and `global_length` resets at the beginning of every region.
+The `global_loop_counter` cumulative the counts for every loops that are candidate of being a marker.
+The `most_recent_loop` is the last executed loop in the region.
+The `most_recent_loop_count` is the iteration count of the `most_recent_loop`.
+The `bb_inst_map` maps the number instructions inside the basic block with the basic block's program counter.
+
+Now, we can use `bb_inst_map` to weight each region's `global_bbv`.
 
 
