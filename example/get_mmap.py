@@ -103,7 +103,7 @@ else:
     addr_mode = " "
 
 workload.set_parameter("readfile_contents",
-f"""#!/bin/bash
+rf"""#!/bin/bash
 # Set the number of threads to use
 export OMP_NUM_THREADS={num_threads}
 # Set the OMP scheduler to static as suggested by the LoopPoint paper
@@ -116,28 +116,30 @@ echo 12345 | sudo -S bash -c '
   cat /proc/sys/kernel/randomize_va_space
 '
 
-# Run the benchmark and put it in the background so that we can continue
-/home/gem5/NPB3.4-OMP/bin/is.A.x &
+# Run the benchmark
+BENCHMARK_CMD='/home/gem5/NPB3.4-OMP/bin/is.A.x'
+PID=$(echo 12345 | sudo -S bash -c "
+  $BENCHMARK_CMD > /tmp/cg_stdout.log 2>&1 &
+  echo \$!
+")
 
-# Capture the process ID of the background process
-PID=$!
+echo "Started benchmark with PID: $PID"
 
-# Wait a little to ensure the process starts
-sleep 0.0047
+# Wait for the benchmark to initialize
+sleep 0.05
 
-# Pause the process
-kill -SIGSTOP $PID
+# Pause the benchmark
+echo 12345 | sudo -S kill -SIGSTOP $PID
 
-# Write the process's memory map to a file
+# Collect the memory map of the process
 echo 12345 | sudo -S cat /proc/$PID/maps > process_map.txt
 
-# Use m5op to write the file back to the host
+# Write the memory map to host
 m5{addr_mode}writefile process_map.txt
-
 # Exit the simulation
 m5{addr_mode}exit
-
 """)
+
 
 board.set_workload(workload)
 

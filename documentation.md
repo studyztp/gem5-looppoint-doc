@@ -39,9 +39,9 @@ This setting fits this example's case because NPB benchmark `IS` with class A in
 You can always change the selection method.
 
 Some things to remember:
-1. Throughout all runs, the number of threads and cores need to be the same for the workload.  
+1. Throughout all runs, the number of threads and cores needs to be the same for the workload.  
 2. Throughout all runs, the size of the memory needs to be the same.  
-3. Throughout all runs, there cannot be any software changes, including any command changes to the system or the workloads. The process of getting the process's address map is the only exception.
+3. Throughout all runs, there cannot be any software changes, including any command changes to the system or the workloads. Getting the process's address map is the only exception.
 
 ### Getting Process's Address Map
 
@@ -50,7 +50,7 @@ In the example script [get_mmap.py](example/get_mmap.py), we change the `readfil
 1. disable ASLR
 2. get the PID of the workload
 3. wait until the workload starts properly  
-4. pause the workload and write down the mmap of the workload  
+4. write down the mmap of the workload  
 5. use `m5 writefile` to write the mmap of the workload from the guest to the host
 
 Depending on your host system, you might have access to KVM or not.  
@@ -59,57 +59,56 @@ With or without KVM shouldn't affect the mmap information you get if your simula
 In the example script [get_mmap.py](example/get_mmap.py), you can run it with
 
 ```bash
-[gem5 binary] -re kvm-get-mmap-m5out get_mmap.py --use-kvm
+[gem5 binary] -re --outdir=kvm-get-mmap-m5out get_mmap.py --use-kvm
 ```
 to 1) take a checkpoint before running the readfile_contents for future restoring and 2) get the process's address map stored in the m5out folder.
 
 You can also run
 
 ```bash 
-[gem5 binary] -re atomic-get-mmap-m5out get_mmap.py
+[gem5 binary] -re --outdir=atomic-get-mmap-m5out get_mmap.py
 ```
 to do the same with ATOMIC CPU.
 
 You can also run
 
 ```bash
-[gem5 binary] -re atomic-get-mmap-m5out get_mmap.py --use-checkpoint
+[gem5 binary] -re --outdir=atomic-get-mmap-m5out get_mmap.py --use-checkpoint
 ```
 to restore from the checkpoint taken before to test and see if there are any difference between the process's address map extracted with KVM and ATOMIC CPU.
 
 After the above step, you should get a process's address map that looks like below:
 
 ```
-00400000-00405000 r-xp 00000000 fe:02 146904                             /home/gem5/NPB3.4-OMP/bin/is.A.x
-0041f000-00420000 r--p 0000f000 fe:02 146904                             /home/gem5/NPB3.4-OMP/bin/is.A.x
-00420000-00421000 rw-p 00010000 fe:02 146904                             /home/gem5/NPB3.4-OMP/bin/is.A.x
-00421000-04621000 rw-p 00000000 00:00 0 
-04621000-04642000 rw-p 00000000 00:00 0                                  [heap]
-fffff7400000-fffff7410000 ---p 00000000 00:00 0 
-fffff7410000-fffff7c10000 rw-p 00000000 00:00 0 
-fffff7d70000-fffff7d80000 rw-s 00000000 00:05 151                        /dev/gem5_bridge
-fffff7d80000-fffff7f1a000 r-xp 00000000 fe:02 39868                      /usr/lib/aarch64-linux-gnu/libc.so.6
-fffff7f1a000-fffff7f2d000 ---p 0019a000 fe:02 39868                      /usr/lib/aarch64-linux-gnu/libc.so.6
-fffff7f2d000-fffff7f30000 r--p 0019d000 fe:02 39868                      /usr/lib/aarch64-linux-gnu/libc.so.6
-fffff7f30000-fffff7f32000 rw-p 001a0000 fe:02 39868                      /usr/lib/aarch64-linux-gnu/libc.so.6
-fffff7f32000-fffff7f3e000 rw-p 00000000 00:00 0 
-fffff7f40000-fffff7f91000 r-xp 00000000 fe:02 11830                      /usr/lib/aarch64-linux-gnu/libgomp.so.1.0.0
-fffff7f91000-fffff7faf000 ---p 00051000 fe:02 11830                      /usr/lib/aarch64-linux-gnu/libgomp.so.1.0.0
-fffff7faf000-fffff7fb0000 r--p 0005f000 fe:02 11830                      /usr/lib/aarch64-linux-gnu/libgomp.so.1.0.0
-fffff7fb0000-fffff7fb1000 rw-p 00060000 fe:02 11830                      /usr/lib/aarch64-linux-gnu/libgomp.so.1.0.0
-fffff7fbe000-fffff7fe5000 r-xp 00000000 fe:02 39865                      /usr/lib/aarch64-linux-gnu/ld-linux-aarch64.so.1
-fffff7fed000-fffff7ff1000 rw-p 00000000 00:00 0 
-fffff7ff7000-fffff7ff9000 rw-p 00000000 00:00 0 
-fffff7ff9000-fffff7ffb000 r--p 00000000 00:00 0                          [vvar]
-fffff7ffb000-fffff7ffc000 r-xp 00000000 00:00 0                          [vdso]
-fffff7ffc000-fffff7ffe000 r--p 0002e000 fe:02 39865                      /usr/lib/aarch64-linux-gnu/ld-linux-aarch64.so.1
-fffff7ffe000-fffff8000000 rw-p 00030000 fe:02 39865                      /usr/lib/aarch64-linux-gnu/ld-linux-aarch64.so.1
-fffffffdf000-1000000000000 rw-p 00000000 00:00 0                         [stack]
+00400000-00405000 r-xp 00000000 fe:02 144851                             /home/gem5/NPB3.4-OMP/bin/is.A.x
+0041f000-00420000 r--p 0000f000 fe:02 144851                             /home/gem5/NPB3.4-OMP/bin/is.A.x
+00420000-00421000 rw-p 00010000 fe:02 144851                             /home/gem5/NPB3.4-OMP/bin/is.A.x
+00421000-04642000 rw-p 00000000 00:00 0                                  [heap]
+7ff7570000-7ff7580000 ---p 00000000 00:00 0 
+7ff7580000-7ff7d80000 rw-p 00000000 00:00 0 
+7ff7d80000-7ff7d90000 rw-s 10010000 00:06 1031                           /dev/mem
+7ff7d90000-7ff7f2a000 r-xp 00000000 fe:02 39860                          /usr/lib/aarch64-linux-gnu/libc.so.6
+7ff7f2a000-7ff7f3d000 ---p 0019a000 fe:02 39860                          /usr/lib/aarch64-linux-gnu/libc.so.6
+7ff7f3d000-7ff7f40000 r--p 0019d000 fe:02 39860                          /usr/lib/aarch64-linux-gnu/libc.so.6
+7ff7f40000-7ff7f42000 rw-p 001a0000 fe:02 39860                          /usr/lib/aarch64-linux-gnu/libc.so.6
+7ff7f42000-7ff7f4e000 rw-p 00000000 00:00 0 
+7ff7f50000-7ff7f9f000 r-xp 00000000 fe:02 33439                          /usr/lib/aarch64-linux-gnu/libgomp.so.1.0.0
+7ff7f9f000-7ff7faf000 ---p 0004f000 fe:02 33439                          /usr/lib/aarch64-linux-gnu/libgomp.so.1.0.0
+7ff7faf000-7ff7fb0000 r--p 0004f000 fe:02 33439                          /usr/lib/aarch64-linux-gnu/libgomp.so.1.0.0
+7ff7fb0000-7ff7fb1000 rw-p 00050000 fe:02 33439                          /usr/lib/aarch64-linux-gnu/libgomp.so.1.0.0
+7ff7fbe000-7ff7fe5000 r-xp 00000000 fe:02 39857                          /usr/lib/aarch64-linux-gnu/ld-linux-aarch64.so.1
+7ff7fee000-7ff7ff2000 rw-p 00000000 00:00 0 
+7ff7ff8000-7ff7ffa000 rw-p 00000000 00:00 0 
+7ff7ffa000-7ff7ffb000 r--p 00000000 00:00 0                              [vvar]
+7ff7ffb000-7ff7ffc000 r-xp 00000000 00:00 0                              [vdso]
+7ff7ffc000-7ff7ffe000 r--p 0002e000 fe:02 39857                          /usr/lib/aarch64-linux-gnu/ld-linux-aarch64.so.1
+7ff7ffe000-7ff8000000 rw-p 00030000 fe:02 39857                          /usr/lib/aarch64-linux-gnu/ld-linux-aarch64.so.1
+7ffffdf000-8000000000 rw-p 00000000 00:00 0                              [stack]
 ```
 
 In this example process's map, we care about two address ranges:
 - the executable code range of our program: ```00400000-00405000```
-- the openMP library address range ```fffff7f40000-fffff7fb1000```
+- the openMP library address range ```7ff7f50000-7ff7fb1000```
 
 For this example, we provided a python script, [extract_addr_range_from_mmap.py](example/extract_addr_range_from_mmap.py) to help us to extract these address ranges automatically.
 
@@ -125,16 +124,14 @@ You should be able to get a json file that looks like below:
 ```json
 {
   "loop_range": [
-    [
-      "0000000000400000",
-      "0000000000405000"
-    ]
+    "0000000000400000",
+    "0000000000405000"
   ],
   "excluded": {
     "/usr/lib/aarch64-linux-gnu/libgomp.so.1.0.0": [
       [
-        "0000fffff7f40000",
-        "0000fffff7fb1000"
+        "0000007ff7f50000",
+        "0000007ff7fb1000"
       ]
     ]
   }

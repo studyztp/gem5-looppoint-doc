@@ -18,9 +18,6 @@ from gem5.utils.requires import requires
 from gem5.isas import ISA
 
 from m5.objects import LooppointAnalysis, LooppointAnalysisManager, AddrRange
-from gem5.simulate.exit_handler import (
-   WorkBeginExitHandler, WorkEndExitHandler
-)
 
 import json
 import m5
@@ -122,7 +119,7 @@ board = ArmBoard(
 
 workload = obtain_resource(
     "arm-ubuntu-24.04-npb-is-a", 
-    resource_version="2.0.0"
+    resource_version="1.0.0"
 )
 
 if use_checkpoint:
