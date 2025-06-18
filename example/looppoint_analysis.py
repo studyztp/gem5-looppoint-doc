@@ -35,6 +35,14 @@ parser.add_argument(
     help="Path to the JSON file containing extracted address ranges."
 )
 parser.add_argument(
+    "--start-tracking", action="store_true",
+    help=(
+        "If set, the simulation will start tracking loops and basic blocks "
+        "from the beginning. If not set, it will only analyze the workload "
+        "after the first workbegin event."
+    )
+)
+parser.add_argument(
     "-rc", "--restore-checkpoint-path",
     type=str, default=None,
     help=(
@@ -78,7 +86,7 @@ if not extracted_addr_ranges_json_file_path.is_file():
         "Cannot read extracted address ranges JSON file: "
         f"{extracted_addr_ranges_json_file_path}"
     )
-
+start_tracking = args.start_tracking
 take_checkpoint = args.checkpoint_store_path is not None
 use_checkpoint = args.restore_checkpoint_path is not None
 restore_checkpoint_path = Path(args.restore_checkpoint_path) if args.restore_checkpoint_path else None
@@ -181,7 +189,8 @@ for core in board.get_processor().get_cores():
     tracker.bb_valid_addr_range = AddrRange(0, 0)
     tracker.marker_valid_addr_range = loop_range
     tracker.bb_excluded_addr_ranges = excluded_ranges
-    tracker.if_listening = False
+    if not start_tracking:
+        tracker.if_listening = False
     core.core.probe_listener = tracker
     all_trackers.append(tracker)
 
@@ -240,6 +249,7 @@ def simpoint_handler():
 def workbegin_handler():
     global checkpoint_store_path
     global use_checkpoint
+    global take_checkpoint
     if take_checkpoint:
         print("Checkpoint store path:", 
                 checkpoint_store_path.as_posix())
